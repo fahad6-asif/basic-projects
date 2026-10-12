@@ -1,0 +1,1601 @@
+{
+  "name": "Final Invoice Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "downloadAttachments": true,
+        "options": {
+          "customEmailConfig": "[[\"UNSEEN\"],[\"Subject\",\"Invoice\"],[\"From\":\"example@gmail.com\"]"
+        }
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -496,
+        -592
+      ],
+      "id": "430b5eff-a852-4cf6-8b7e-464deed73978",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "DZoJFRBsqHizBXL0",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -624
+      ],
+      "id": "b325f2e9-590f-4a03-a0e3-332a88869d46",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "kimi-k2.6",
+          "mode": "list",
+          "cachedResultName": "kimi-k2.6"
+        },
+        "text": "You are acting as an OCR and data-extraction engine for a supplier invoice image.\n\nExtract ONLY the fields listed below. Do not add, infer, guess, or auto-correct \nany value. If a field is not visible, damaged, or illegible, output null for \nthat field — never a placeholder word, never a best guess, never a dash.\n\nNever invent a plausible-looking value. If you are not confident in a reading, \noutput null rather than your best guess.\n\nFORMAT RULES:\n- All dates: DD/MM/YYYY (e.g. 19/05/2026)\n- All numeric fields (quantity, price per unit, line amount, subtotal, gst \n  amount, total, gst percent): plain numbers only. No commas, no currency \n  symbols, no percent signs, no text. Example: 80000 not 80,000.\n- gst percent: write only the number, e.g. 0.18 not 18%\n- Supplier and Bill To: name only, not the address.\n- only Give GST percentage in decimal so if its is 18% write 0.18\n\nOutput the following fields exactly, as a single JSON object:\n\n{\n  \"invoice_number\": \"\",\n   \"money_rounding_tolerance\":1,\n   \"gst_tolerance\":0.5,\n   \"po_variance\":0.02,\n  \"po_number\": \"\",\n  \"invoice_date\": \"\",\n  \"due_date\": \"\",\n  \"supplier\": \"\",\n  \"supplier_address\": \"\",\n  \"bill_to\": \"\",\n  \"payment_terms\": \"\",\n  \"ntn\": \"\",\n  \"subtotal\": 0,\n  \"gst_percent\": 0\n  \"gst_amount\": 0,\n  \"total\": 0,\n  \"bank\": \"\",\n  \"iban\": \"\",\n  \"total_line_items\": 0,\n  \"line_items\": [\n    {\n      \"description\": \"\",\n      \"quantity\": 0,\n      \"price_per_unit\": 0,\n      \"line_amount\": 0\n    }\n  ],\n  \"confidence\": 0.0\n}\n\nconfidence: your own estimate (0 to 1) of how legible/certain this extraction \nis overall — lower it if the image is blurry, low-resolution, or any field \nrequired a guess you're not fully sure of.\n\nOutput ONLY this JSON object. No preamble, no explanation, no markdown \nformatting, no backticks.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.moonshot",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -624
+      ],
+      "id": "485ea2f6-8cf2-46a1-87e9-1e855918c33d",
+      "name": "Analyze image",
+      "credentials": {
+        "moonshotApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.content }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "invoice_number",
+              "description": "1"
+            },
+            {
+              "name": "po_number",
+              "description": "w"
+            },
+            {
+              "name": "invoice_date",
+              "description": "2"
+            },
+            {
+              "name": "due_date",
+              "description": "1"
+            },
+            {
+              "name": "supplier",
+              "description": "1"
+            },
+            {
+              "name": "bill_to",
+              "description": "1"
+            },
+            {
+              "name": "payment_terms",
+              "description": "1"
+            },
+            {
+              "name": "ntn",
+              "description": "1"
+            },
+            {
+              "name": "subtotal",
+              "type": "number",
+              "description": "1"
+            },
+            {
+              "name": "gst_percent",
+              "type": "number",
+              "description": "1"
+            },
+            {
+              "name": "gst_amount",
+              "type": "number",
+              "description": "1"
+            },
+            {
+              "name": "total",
+              "type": "number",
+              "description": "1"
+            },
+            {
+              "name": "bank",
+              "description": "1"
+            },
+            {
+              "name": "iban",
+              "description": "1"
+            },
+            {
+              "name": "total_line_items",
+              "type": "number",
+              "description": "1"
+            },
+            {
+              "name": "line_items",
+              "description": "1"
+            },
+            {
+              "name": "confidence",
+              "type": "number",
+              "description": "0.1"
+            },
+            {
+              "name": "money_rounding_tolerance",
+              "type": "number",
+              "description": "1"
+            },
+            {
+              "name": "gst_tolerance",
+              "type": "number",
+              "description": "2"
+            },
+            {
+              "name": "po_variance",
+              "type": "number",
+              "description": "1"
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm converting invoice OCR text into structured data.\n\nOnly extract information that is explicitly present in the text. \nNever guess, infer, or fabricate a value. \nIf an attribute's value is missing or illegible, set it to null — do not omit the key, and do not use a dash or placeholder word.\n\nline_items must be a JSON array of objects, valid JSON syntax throughout \n(standard array/object comma placement).\nAll numeric fields (quantity, price_per_unit, line_amount, subtotal, gst_amount, \ntotal, gst_percent) must be plain numbers — no commas, no currency symbols, no % sign.\nThe gst_percent value. Keep the decimal point intact (e.g., 0.18, not 18)\nany value that is null should be left null\n\nDo only what is instructed above. Do not add extra fields, commentary, or formatting beyond the schema."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -256,
+        -400
+      ],
+      "id": "05950bea-a481-475e-811f-88469dc04a6a",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -208
+      ],
+      "id": "3b873196-c37f-467d-b1df-1f0c2e21d142",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "MFsNYgUfRsNQd4xf",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "YOUR_FILE_ID",
+          "mode": "list",
+          "cachedResultName": "INV-1006.png",
+          "cachedResultUrl": "https://drive.google.com/file/d/YOUR_FILE_ID/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -48,
+        -624
+      ],
+      "id": "edcd3434-8b3d-4540-b544-799c9852dff7",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fKnuCA2LeFHylWTj",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "OCR to scan invoice and convert it into JSON",
+        "height": 112,
+        "width": 160
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -784
+      ],
+      "id": "2d1bfd0c-19f2-4b20-aa30-02300b25f50b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Getting rows and using if node to check for duplicate invoices",
+        "height": 144,
+        "width": 150
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -592
+      ],
+      "id": "b5fbd9de-9675-4d9d-9378-42535d0d47c6",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "logging invoice into databse",
+        "height": 96,
+        "width": 150
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        -640
+      ],
+      "id": "2df5bd10-bd3c-42af-a6f9-595a980670b4",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Validation use code node\n",
+        "height": 80,
+        "width": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -624
+      ],
+      "id": "523b80c4-1174-426c-975e-8ed266bcf9c0",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "gst_percent_expected = 0.18\ngst_margin = 0.005\nmin_confidence = 0.80\nmoney_tolerance = 1\npo_variance = 0.02\n\nresults = []\n\nfor item in _items:\n    mock = item['json']\n    invoice = mock['output']\n    reasons = []\n\n    supplier = invoice.get('supplier')\n    ntn = invoice.get('ntn')\n    invoice_number = invoice.get('invoice_number')\n    invoice_date = invoice.get('invoice_date')\n    po_number = invoice.get('po_number')\n    payment_terms = invoice.get('payment_terms')\n    subtotal = invoice.get('subtotal')\n    gst_percent = invoice.get('gst_percent')\n    gst_amount = invoice.get('gst_amount')\n    total = invoice.get('total')\n    confidence = invoice.get('confidence')\n\n    mock_po = mock.get('mock PO Number')\n    mock_supplier = mock.get('mock Supplier')\n    mock_total = mock.get('mock Expected total (PKR)')\n\n    if po_number and mock_po:\n        if po_number != mock_po:\n            reasons.append('PO number mismatch')\n\n    if supplier and mock_supplier:\n        if supplier != mock_supplier:\n            reasons.append('supplier mismatch')\n\n    if total is not None and mock_total is not None:\n        variance = abs(mock_total - total) / mock_total\n        if variance > po_variance:\n            reasons.append('PO total variance too high')\n\n    if gst_percent is not None:\n        if abs(gst_percent - gst_percent_expected) > gst_margin:\n            reasons.append('GST rate not correct')\n\n    if subtotal is not None and gst_percent is not None and gst_amount is not None:\n        expected_gst = subtotal * gst_percent\n        if abs(expected_gst - gst_amount) > money_tolerance:\n            reasons.append('GST amount error')\n\n    if subtotal is not None and gst_amount is not None and total is not None:\n        expected_total = subtotal + gst_amount\n        if abs(expected_total - total) > money_tolerance:\n            reasons.append('total error')\n\n    line_items = invoice.get('line_items')\n    line_sum = 0\n    if line_items is not None:\n        for i in line_items:\n            qty = i.get('quantity')\n            price = i.get('price_per_unit')\n            line_amount = i.get('line_amount')\n\n            if qty is None:\n                reasons.append('line item missing quantity')\n            elif price is None:\n                reasons.append('line item missing price')\n            elif line_amount is None:\n                reasons.append('line item missing amount')\n            else:\n                check = qty * price\n                if abs(check - line_amount) > money_tolerance:\n                    reasons.append('line math error')\n                line_sum = line_sum + line_amount\n\n        if subtotal is not None:\n            if abs(line_sum - subtotal) > money_tolerance:\n                reasons.append('line items do not sum to subtotal')\n\n    if not supplier:\n        reasons.append('missing field: supplier')\n    if not ntn:\n        reasons.append('missing field: ntn')\n    if not invoice_number:\n        reasons.append('missing field: invoice_number')\n    if not invoice_date:\n        reasons.append('missing field: invoice_date')\n    if not po_number:\n        reasons.append('missing field: po_number')\n    if not payment_terms:\n        reasons.append('missing field: payment_terms')\n\n    if confidence:\n      if confidence < min_confidence:\n        reasons.append('low confidence')\n    else:\n      reasons.append('low confidence')\n\n    if len(reasons) == 0:\n        status = 'approve'\n    else:\n        status = 'review'\n\n    reason_text = '; '.join(reasons)\n\n    results.append({\n        'json': {\n            'invoice_number': invoice_number,\n            'status': status,\n            'reasons': reason_text\n        }\n    })\n\nreturn results"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        -496
+      ],
+      "id": "9cdf61ea-c9dd-4b03-9d8b-3fdddf780c4e",
+      "name": "Code in Python"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n Invoice Automation Tool",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 520431780,
+          "mode": "list",
+          "cachedResultName": "Parent Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=520431780"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Invoice Number",
+              "lookupValue": "={{ $json.output.invoice_number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        -400
+      ],
+      "id": "6f35c88c-9e88-4180-9c28-774f399c8955",
+      "name": "Get row(s) in sheet3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVKmVEvxsu7zTVB4",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7ffe7aa3-ad37-4c16-9899-df71f66a3fdd",
+              "leftValue": "={{ Object.keys($json).length === 0 }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        944,
+        -400
+      ],
+      "id": "b29ed0f7-d7db-43ff-9522-ec50e32bc9f0",
+      "name": "If11"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n Invoice Automation Tool",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 549052684,
+          "mode": "list",
+          "cachedResultName": "Review Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=549052684"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice Number": "={{ $json[\"Invoice Number\"] }}",
+            "PO Number": "={{ $json[\"PO Number\"] }}",
+            "NTN": "={{ $json.NTN }}",
+            "Supplier": "={{ $json.Supplier }}",
+            "Bill To": "={{ $json[\"Bill To\"] }}",
+            "Payment Terms": "={{ $json[\"Payment Terms\"] }}",
+            "Invoice Date": "={{ $json[\"Invoice Date\"] }}",
+            "Due Date": "={{ $json[\"Due Date\"] }}",
+            "Subtotal": "={{ $json.Subtotal }}",
+            "GST ": "={{ $json[\"GST \"] }}",
+            "GST Amount": "={{ $json[\"GST Amount\"] }}",
+            "Total": "={{ $json.Total }}",
+            "Bank": "={{ $json.Bank }}",
+            "IBAN": "={{ $json.IBAN }}",
+            "Status": "=review",
+            "Reason": "Duplicate invoice"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice Number",
+              "displayName": "Invoice Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PO Number",
+              "displayName": "PO Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NTN",
+              "displayName": "NTN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Supplier",
+              "displayName": "Supplier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bill To",
+              "displayName": "Bill To",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Terms",
+              "displayName": "Payment Terms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice Date",
+              "displayName": "Invoice Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subtotal",
+              "displayName": "Subtotal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "GST ",
+              "displayName": "GST ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "GST Amount",
+              "displayName": "GST Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bank",
+              "displayName": "Bank",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IBAN",
+              "displayName": "IBAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1152,
+        -288
+      ],
+      "id": "3d39d7ff-02d1-4cd9-9221-7756d9b39fd7",
+      "name": "Append row in sheet5",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVKmVEvxsu7zTVB4",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "090abaef-5535-4786-af02-538648ae26bf",
+              "name": "output.invoice_number",
+              "value": "={{ $('Information Extractor').item.json.output.invoice_number }}",
+              "type": "string"
+            },
+            {
+              "id": "44036666-9b76-4290-bd2d-9f2a31b858ab",
+              "name": "output.po_number",
+              "value": "={{ $('Information Extractor').item.json.output.po_number }}",
+              "type": "string"
+            },
+            {
+              "id": "a12fa18b-1861-49d6-b066-c938a3225fc0",
+              "name": "output.invoice_date",
+              "value": "={{ $('Information Extractor').item.json.output.invoice_date }}",
+              "type": "string"
+            },
+            {
+              "id": "4cb74029-43e2-49bb-9f5c-dcba24b1075f",
+              "name": "output.due_date",
+              "value": "={{ $('Information Extractor').item.json.output.due_date }}",
+              "type": "string"
+            },
+            {
+              "id": "e86da1e5-0a51-498f-a99b-40297849119a",
+              "name": "output.supplier",
+              "value": "={{ $('Information Extractor').item.json.output.supplier }}",
+              "type": "string"
+            },
+            {
+              "id": "cc3cabb9-a21d-46fa-94ef-fe7b98b5c1eb",
+              "name": "output.bill_to",
+              "value": "={{ $('Information Extractor').item.json.output.bill_to }}",
+              "type": "string"
+            },
+            {
+              "id": "bfabf65a-692d-482a-bd62-c22ee67917f5",
+              "name": "output.payment_terms",
+              "value": "={{ $('Information Extractor').item.json.output.payment_terms }}",
+              "type": "string"
+            },
+            {
+              "id": "8841d39f-d45d-4e1b-9a4d-21adebc8cdbf",
+              "name": "output.ntn",
+              "value": "={{ $('Information Extractor').item.json.output.ntn }}",
+              "type": "string"
+            },
+            {
+              "id": "f006d22a-ec9e-488b-9edb-3715a3280772",
+              "name": "output.subtotal",
+              "value": "={{ $('Information Extractor').item.json.output.subtotal }}",
+              "type": "number"
+            },
+            {
+              "id": "d471d7d4-ba03-454e-b83c-427a46b22d63",
+              "name": "output.gst_percent",
+              "value": "={{ $('Information Extractor').item.json.output.gst_percent }}",
+              "type": "number"
+            },
+            {
+              "id": "b2f7b892-5622-474c-807c-572f6df03033",
+              "name": "output.gst_amount",
+              "value": "={{ $('Information Extractor').item.json.output.gst_amount }}",
+              "type": "number"
+            },
+            {
+              "id": "4f7879fb-abb1-428c-98da-bd2ba73741d5",
+              "name": "output.total",
+              "value": "={{ $('Information Extractor').item.json.output.total }}",
+              "type": "number"
+            },
+            {
+              "id": "cc7a1258-4050-462e-bbb0-b5a617c26489",
+              "name": "output.bank",
+              "value": "={{ $('Information Extractor').item.json.output.bank }}",
+              "type": "string"
+            },
+            {
+              "id": "229ccb88-549c-4de6-8704-04558e3a4907",
+              "name": "output.iban",
+              "value": "={{ $('Information Extractor').item.json.output.iban }}",
+              "type": "string"
+            },
+            {
+              "id": "54b7ffee-9890-4a93-9c60-176a716196bf",
+              "name": "output.total_line_items",
+              "value": "={{ $('Information Extractor').item.json.output.total_line_items }}",
+              "type": "number"
+            },
+            {
+              "id": "aa77eedb-1ed8-47d4-bcc2-e0dc4a6877d2",
+              "name": "output.line_items",
+              "value": "={{ $('Information Extractor').item.json.output.line_items }}",
+              "type": "array"
+            },
+            {
+              "id": "e29ef8b3-9093-4bc9-8459-7cdb4cb83a1c",
+              "name": "output.confidence",
+              "value": "={{ $('Information Extractor').item.json.output.confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "e99a7f3d-f120-4fca-abb8-6414f7a5f8df",
+              "name": "mock PO Number",
+              "value": "={{ $json['PO Number'] }}",
+              "type": "string"
+            },
+            {
+              "id": "e51acc97-d709-46c2-8e59-bf1471154031",
+              "name": "mock Supplier",
+              "value": "={{ $json.Supplier }}",
+              "type": "string"
+            },
+            {
+              "id": "c3c754fa-99d9-4066-b00e-803eb71b5bcb",
+              "name": "mock Expected total (PKR)",
+              "value": "={{ $json['Expected total (PKR)'] }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1504,
+        -496
+      ],
+      "id": "29ec5cc4-3ec7-4a4e-b0c1-a1e1a2141c08",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.line_items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        -512
+      ],
+      "id": "b9cc7295-1f9f-48e1-ad6b-5df541d91181",
+      "name": "Split Out4"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n Invoice Automation Tool",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1608325257,
+          "mode": "list",
+          "cachedResultName": "Mock Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=1608325257"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Invoice Number",
+              "lookupValue": "={{ $('Information Extractor').item.json.output.invoice_number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1168,
+        -496
+      ],
+      "id": "82f38832-6d43-48f9-ac53-21281163dc33",
+      "name": "Get row(s) in sheet4",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVKmVEvxsu7zTVB4",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n Invoice Automation Tool",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 520431780,
+          "mode": "list",
+          "cachedResultName": "Parent Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=520431780"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice Number": "={{ $('Edit Fields3').item.json.output.invoice_number }}",
+            "PO Number": "={{ $('Edit Fields3').item.json.output.po_number }}",
+            "NTN": "={{ $('Edit Fields3').item.json.output.ntn }}",
+            "Supplier": "={{ $('Edit Fields3').item.json.output.supplier }}",
+            "Bill To": "={{ $('Edit Fields3').item.json.output.bill_to }}",
+            "Payment Terms": "={{ $('Edit Fields3').item.json.output.payment_terms }}",
+            "Invoice Date": "={{ $('Edit Fields3').item.json.output.invoice_date }}",
+            "Due Date": "={{ $('Edit Fields3').item.json.output.due_date }}",
+            "Subtotal": "={{ $('Edit Fields3').item.json.output.subtotal }}",
+            "GST ": "={{ $('Edit Fields3').item.json.output.gst_percent }}",
+            "GST Amount": "={{ $('Edit Fields3').item.json.output.gst_amount }}",
+            "Total": "={{ $('Edit Fields3').item.json.output.total }}",
+            "Bank": "={{ $('Edit Fields3').item.json.output.bank }}",
+            "IBAN": "={{ $('Edit Fields3').item.json.output.iban }}",
+            "Status": "={{ $('Code in Python').item.json.status }}",
+            "Reason": "={{ $('Code in Python').item.json.reasons }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice Number",
+              "displayName": "Invoice Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PO Number",
+              "displayName": "PO Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NTN",
+              "displayName": "NTN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Supplier",
+              "displayName": "Supplier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bill To",
+              "displayName": "Bill To",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Terms",
+              "displayName": "Payment Terms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice Date",
+              "displayName": "Invoice Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subtotal",
+              "displayName": "Subtotal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "GST ",
+              "displayName": "GST ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "GST Amount",
+              "displayName": "GST Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bank",
+              "displayName": "Bank",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IBAN",
+              "displayName": "IBAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2112,
+        -512
+      ],
+      "id": "f06f50fb-ae58-4357-9135-e76a31f00306",
+      "name": "Append row in sheet10",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVKmVEvxsu7zTVB4",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6a7bcb1f-6c4e-4b87-8e62-68662616b39b",
+              "name": "output.line_items",
+              "value": "={{ $('Edit Fields3').item.json.output.line_items }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2272,
+        -512
+      ],
+      "id": "900a73b1-dd99-48ac-be2e-71b6ad557aa1",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n Invoice Automation Tool",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1511757505,
+          "mode": "list",
+          "cachedResultName": "Child Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=1511757505"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Items": "={{ $json.description }}",
+            "Quantity": "={{ $json.quantity }}",
+            "Price per unit (PKR)": "={{ $json.price_per_unit }}",
+            "Line Amount (PKR)": "={{ $json.line_amount }}",
+            "Invoice Number": "={{ $('Edit Fields3').item.json.output.invoice_number }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice Number",
+              "displayName": "Invoice Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Items",
+              "displayName": "Items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price per unit (PKR)",
+              "displayName": "Price per unit (PKR)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Line Amount (PKR)",
+              "displayName": "Line Amount (PKR)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2592,
+        -512
+      ],
+      "id": "d4862272-5875-461a-a1ad-0c5c6d6363d1",
+      "name": "Append row in sheet11",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVKmVEvxsu7zTVB4",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "69dafd60-0935-4a53-890b-8373a64c519a",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        -496
+      ],
+      "id": "f7be38a9-4983-4265-9693-6a26bb71bc87",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n Invoice Automation Tool",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 549052684,
+          "mode": "list",
+          "cachedResultName": "Review Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit#gid=549052684"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice Number": "={{ $('Edit Fields3').item.json.output.invoice_number }}",
+            "PO Number": "={{ $('Edit Fields3').item.json.output.po_number }}",
+            "NTN": "={{ $('Edit Fields3').item.json.output.ntn }}",
+            "Supplier": "={{ $('Edit Fields3').item.json.output.supplier }}",
+            "Bill To": "={{ $('Edit Fields3').item.json.output.bill_to }}",
+            "Payment Terms": "={{ $('Edit Fields3').item.json.output.payment_terms }}",
+            "Invoice Date": "={{ $('Edit Fields3').item.json.output.invoice_date }}",
+            "Due Date": "={{ $('Edit Fields3').item.json.output.due_date }}",
+            "Subtotal": "={{ $('Edit Fields3').item.json.output.subtotal }}",
+            "GST ": "={{ $('Edit Fields3').item.json.output.gst_percent }}",
+            "GST Amount": "={{ $('Edit Fields3').item.json.output.gst_amount }}",
+            "Total": "={{ $('Edit Fields3').item.json.output.total }}",
+            "Bank": "={{ $('Edit Fields3').item.json.output.bank }}",
+            "IBAN": "={{ $('Edit Fields3').item.json.output.iban }}",
+            "Status": "={{ $('Code in Python').item.json.status }}",
+            "Reason": "={{ $('Code in Python').item.json.reasons }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice Number",
+              "displayName": "Invoice Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PO Number",
+              "displayName": "PO Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NTN",
+              "displayName": "NTN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Supplier",
+              "displayName": "Supplier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bill To",
+              "displayName": "Bill To",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Terms",
+              "displayName": "Payment Terms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice Date",
+              "displayName": "Invoice Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subtotal",
+              "displayName": "Subtotal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "GST ",
+              "displayName": "GST ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "GST Amount",
+              "displayName": "GST Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bank",
+              "displayName": "Bank",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IBAN",
+              "displayName": "IBAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1968,
+        -272
+      ],
+      "id": "d21a9d60-70e2-4af7-8d0f-e829fec3fd64",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVKmVEvxsu7zTVB4",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "you@example.com",
+        "toEmail": "you@example.com",
+        "subject": "Invoice Review",
+        "emailFormat": "text",
+        "text": "An invoice has been flagged for manual review.\nPlease read the invoice and take the appropriate action.",
+        "options": {
+          "appendAttribution": false,
+          "fileAttachments": "data"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2480,
+        32
+      ],
+      "id": "a276e44a-d26f-4f10-8a6a-52fd1a1eba97",
+      "name": "Send an Email",
+      "webhookId": "ff5ea9a1-aedc-432e-98af-9e190d84f61d",
+      "credentials": {
+        "smtp": {
+          "id": "9gE63IJiQXDEuaRG",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Sending file for manual review",
+        "height": 80,
+        "width": 150
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        -128
+      ],
+      "id": "0162b478-3451-46f5-a27b-164a4f22f926",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2320,
+        32
+      ],
+      "id": "2e8c6b78-69bd-4445-9cd8-3e5ee1f6d648",
+      "name": "Convert to File"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet3": {
+      "main": [
+        [
+          {
+            "node": "If11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If11": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet5": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out4": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet10": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Split Out4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email": {
+      "main": [
+        []
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
